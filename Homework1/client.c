@@ -8,28 +8,33 @@
 #include <unistd.h>
 #include <time.h>
 
+#define MESSAGE_SIZE 65507
+//#define TCP_MESSAGE_SIZE 65535
+#define TCP_MESSAGE_SIZE 65483
+#define LOCALHOST_ADRESS "127.0.0.1"
+#define SERVER_ADRESS "35.226.70.186"
+
 extern int errno;
 
 void tcp_protocol()
 {
-        int serverSocket;
+        int clientSocket;
         struct sockaddr_in serverAddr;
 
-        if((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+        if((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         {
-            printf("%s\n", "Eroare la socket");
+            perror("Eroare la socket");
             return;
         }
 
-        //int nr = strlen(protocol_type);
-
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(2030);
-        serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        serverAddr.sin_addr.s_addr = inet_addr(LOCALHOST_ADRESS);
+        //
 
-        if(connect(serverSocket, (struct sockaddr *) &serverAddr, sizeof(struct sockaddr)) == -1)
+        if(connect(clientSocket, (struct sockaddr *) &serverAddr, sizeof(struct sockaddr)) == -1)
         {
-            printf("%s\n", "Eroare la connect");
+            perror("Eroare la connect");
             return;
         }
 
@@ -41,62 +46,45 @@ void tcp_protocol()
             perror("Eroare la deschiderea fisierului");
         }
 
-        //read message_size from file
-
-        int i;
-        int c;
-        char message[65335];
+        int i, c;
+        int message_size;
+        char message[TCP_MESSAGE_SIZE];
         int messages_sent_number = 0;
         int bytes_sent_number = 0;
+        int bytes_sent = 0;
         clock_t start,end;
 
         start = clock();
         do
         {
-            //memset(message, 0, sizeof(message));
-            for(i = 0; i < 65335; i++)
+            for(i = 0; i < TCP_MESSAGE_SIZE; i++)
             {
                 c = fgetc(file);
                 if(c == EOF)
                     break;
                 else
                 {
-                    //printf("%c", c);
                     message[i] = c;
                 }      
             }
-
-            //message[i] = '\0';
-            int message_size = i;
-            printf("%d\n", message_size);
-            //printf("%s\n", message);
-
-            if(message_size == 0)
-            {
-                if(write(serverSocket, &message_size, sizeof(int)) <= 0)
-                {
-                    perror("Eroare la write");
-                }
-
-                break;
-            }
-
-            if(write(serverSocket, &message_size, sizeof(int)) <= 0)
-            {
-                perror("Eroare la write1");
-            }
-
-            if(write(serverSocket, message, message_size) <= 0)
+            message_size = i;
+        
+            if((bytes_sent = write(clientSocket, message, message_size)) <= 0)
             {
                 perror("Eroare la write2");
             }
 
-            messages_sent_number = messages_sent_number + 1;
-            bytes_sent_number = bytes_sent_number + i;
+            printf("%d\n", bytes_sent);
+            
+            messages_sent_number++;
+            bytes_sent_number = bytes_sent_number + bytes_sent;
 
         }
         while(c !=EOF);
         
+        fclose(file);
+        close(clientSocket);
+
         end = clock();
 
         double transmission_time;
@@ -110,22 +98,20 @@ void tcp_protocol()
 
 void tcpsw_protocol()
 {
-        int serverSocket;
+        int clientSocket;
         struct sockaddr_in serverAddr;
 
-        if((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+        if((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         {
             printf("%s\n", "Eroare la socket");
             return;
         }
 
-        //int nr = strlen(protocol_type);
-
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(2030);
-        serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        serverAddr.sin_addr.s_addr = inet_addr(LOCALHOST_ADRESS);
 
-        if(connect(serverSocket, (struct sockaddr *) &serverAddr, sizeof(struct sockaddr)) == -1)
+        if(connect(clientSocket, (struct sockaddr *) &serverAddr, sizeof(struct sockaddr)) == -1)
         {
             printf("%s\n", "Eroare la connect");
             return;
@@ -135,61 +121,46 @@ void tcpsw_protocol()
 
         if(file == NULL)
         {
-            printf("%s\n", "Eroare la deschiderea fisierului");
             perror("Eroare la deschiderea fisierului");
         }
 
-        //read message_size from file
+        fseek(file, 0L, SEEK_END);
+        int file_size = ftell(file);
+        fseek(file, 0L, SEEK_SET);
 
-        int i;
-        int c;
-        char message[65335];
+        write(clientSocket, &file_size, sizeof(int));
+
+        int i, c;
+        char message[TCP_MESSAGE_SIZE];
         char confirm_message[3];
         int messages_sent_number = 0;
         int bytes_sent_number = 0;
         int bytes_sent = 0;
+        int message_size = 0;
         clock_t start,end;
 
         start = clock();
         do
         {
-            for(i = 0; i < 65335; i++)
+            for(i = 0; i < TCP_MESSAGE_SIZE; i++)
             {
                 c = fgetc(file);
                 if(c == EOF)
                     break;
-                else
-                {
-                    //printf("%c", c);
-                    message[i] = c;
-                }      
+                message[i] = c;
+                  
             }
 
-            int message_size = i;          
+            message_size = i;          
 
-            if(message_size == 0)
-            {
-                if(write(serverSocket, &message_size, sizeof(int)) <= 0)
-                {
-                    perror("Eroare la write");
-                }
-
-                break;
-            }
-
-            if(write(serverSocket, &message_size, sizeof(int)) <= 0)
-            {
-                perror("Eroare la write1");
-            }
-
-            if((bytes_sent = write(serverSocket, message, message_size)) <= 0)
+            if((bytes_sent = write(clientSocket, message, message_size)) <= 0)
             {
                 perror("Eroare la write2");
             }
 
             printf("%d\n", bytes_sent);
 
-            if(read(serverSocket, confirm_message, 3) < 0)
+            if(read(clientSocket, confirm_message, 3) < 0)
             {
                 perror("Eroare la citirea confirm_message");
             }
@@ -199,8 +170,8 @@ void tcpsw_protocol()
 
             if(strcmp(confirm_message, "DA") == 0)
             {
-                messages_sent_number = messages_sent_number + 1;
-                bytes_sent_number = bytes_sent_number + i;
+                messages_sent_number ++;
+                bytes_sent_number = bytes_sent_number + bytes_sent;
             }
 
             if(strcmp(confirm_message, "NU") == 0)
@@ -208,10 +179,9 @@ void tcpsw_protocol()
                 while(1)
                 {
                     //printf("%s\n", "aici2");
-                    write(serverSocket, &message_size, sizeof(int));
-                    write(serverSocket, message, message_size);
+                    write(clientSocket, message, message_size);
 
-                    read(serverSocket, confirm_message, 3);
+                    read(clientSocket, confirm_message, 3);
 
                     if(strcmp(confirm_message, "DA") == 0)
                     {
@@ -224,6 +194,9 @@ void tcpsw_protocol()
         }
         while(c !=EOF);
         
+        //fclose(file);
+        //close(clientSocket);
+
         end = clock();
 
         double transmission_time;
@@ -233,6 +206,7 @@ void tcpsw_protocol()
         printf("Transmission time : %f seconds\n", transmission_time);
         printf("Messages sent : %d\n", messages_sent_number);
         printf("Bytes sent %d\n", bytes_sent_number);
+        printf("File size : %d\n", file_size);
 }
 
 void udp_protocol()
@@ -244,20 +218,21 @@ void udp_protocol()
 
     if ((serverSocket = socket (AF_INET, SOCK_DGRAM,  IPPROTO_UDP)) == -1)
     {
-      perror ("[server]Eroare la socket().\n");
-      //return errno;
+      perror ("Eroare la socket.\n");
     }
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(2030);
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    serverAddr.sin_addr.s_addr = inet_addr(LOCALHOST_ADRESS); 
+    //"35.226.70.186"
 
     length = sizeof(serverAddr);
 
-    char message[65335];
+    char message[MESSAGE_SIZE];
     int message_size;
+    int bytes_sent = 0;
     int nr_messages_sent = 0;
-    long bytes_sent = 0;
+    long nr_bytes_sent = 0;
     clock_t start, end;
 
     FILE *file = fopen("file.txt", "r");
@@ -267,7 +242,7 @@ void udp_protocol()
     start = clock();
     do
     {
-        for(i = 0; i < 65335; i++)
+        for(i = 0; i < MESSAGE_SIZE; i++)
         {
             c = fgetc(file);
             if(c == EOF)
@@ -280,22 +255,20 @@ void udp_protocol()
 
         message_size = i;
 
-        printf("%d\n", message_size);
-
         if (sendto (serverSocket, &message_size, sizeof(int), 0, (struct sockaddr*)&serverAddr, length) <= 0)
         {
-            perror ("[client]Eroare la sendto() spre server.\n");
-            //perror (errno);
+            perror ("Eroare la trimiterea dimensiunii mesajului.\n");
         }
 
-        if (sendto (serverSocket, message, message_size,0, (struct sockaddr*)&serverAddr, length) <= 0)
+        if ((bytes_sent = sendto (serverSocket, message, message_size,0, (struct sockaddr*)&serverAddr, length)) <= 0)
         {
-            perror ("[client]Eroare la sendto() spre server.\n");
-            //perror (errno);
+            perror ("Eroare la trimiterea mesajului.\n");
         }
+
+        //printf("%d\n", bytes_sent);
 
         nr_messages_sent ++;
-        bytes_sent += message_size;
+        nr_bytes_sent += bytes_sent;
     }
     while(c != EOF);
     end = clock();
@@ -305,7 +278,8 @@ void udp_protocol()
 
     printf("Transmission time : %f seconds \n", transmission_time);
     printf("Mesages sent : %d\n", nr_messages_sent);
-    printf("Bytes sent : %ld\n", bytes_sent);
+    printf("Bytes sent : %ld\n", nr_bytes_sent);
+    printf("Protocol : UDP Streaming\n");
 }
 
 void udpsw_protocol()
@@ -317,21 +291,22 @@ void udpsw_protocol()
 
     if ((serverSocket = socket (AF_INET, SOCK_DGRAM,  IPPROTO_UDP)) == -1)
     {
-      perror ("[server]Eroare la socket().\n");
-      //return errno;
+      perror ("Eroare la socket.\n");
     }
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(2030);
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    serverAddr.sin_addr.s_addr = inet_addr(LOCALHOST_ADRESS); 
+    //"35.226.70.186"
 
     length = sizeof(serverAddr);
 
-    char message[65335];
+    char message[MESSAGE_SIZE];
     char compare_message[3];
     int message_size;
     int nr_messages_sent = 0;
-    long bytes_sent = 0;
+    long nr_bytes_sent = 0;
+    int bytes_sent;
     clock_t start, end;
 
     FILE *file = fopen("file.txt", "r");
@@ -341,7 +316,7 @@ void udpsw_protocol()
     start = clock();
     do
     {
-        for(i = 0; i < 65335; i++)
+        for(i = 0; i < MESSAGE_SIZE; i++)
         {
             c = fgetc(file);
             if(c == EOF)
@@ -351,20 +326,19 @@ void udpsw_protocol()
                 message[i] = c;
             }      
         }
-
         message_size = i;
-
-        printf("%d\n", message_size);
 
         if (sendto (serverSocket, &message_size, sizeof(int), 0, (struct sockaddr*)&serverAddr, length) <= 0)
         {
-            perror ("[client]Eroare la sendto() spre server.\n");
+            perror ("Eroare la trimiterea dim mesajului.\n");
         }
 
-        if (sendto (serverSocket, message, message_size,0, (struct sockaddr*)&serverAddr, length) <= 0)
+        if ((bytes_sent = sendto (serverSocket, message, message_size, 0, (struct sockaddr*)&serverAddr, length)) <= 0)
         {
-            perror ("[client]Eroare la sendto() spre server.\n");
+            perror ("Eroare la trimiterea mesajului.\n");
         }
+
+        printf("%d\n", bytes_sent);
 
         recvfrom(serverSocket, compare_message, 3, 0,(struct sockaddr*) &serverAddr, &length);
 
@@ -373,7 +347,7 @@ void udpsw_protocol()
             while(1)
             {
                 sendto (serverSocket, &message_size, sizeof(int), 0, (struct sockaddr*)&serverAddr, length);
-                sendto (serverSocket, message, message_size,0, (struct sockaddr*)&serverAddr, length);
+                bytes_sent = sendto (serverSocket, message, message_size,0, (struct sockaddr*)&serverAddr, length);
 
                 recvfrom(serverSocket, compare_message, 3, 0,(struct sockaddr*) &serverAddr, &length);
 
@@ -387,7 +361,7 @@ void udpsw_protocol()
         if(strcmp(compare_message, "DA") == 0)
         {
             nr_messages_sent ++;
-            bytes_sent += message_size;
+            nr_bytes_sent += bytes_sent;
             continue;
         }
     }
@@ -399,7 +373,7 @@ void udpsw_protocol()
 
     printf("Transmission time : %f seconds \n", transmission_time);
     printf("Mesages sent : %d\n", nr_messages_sent);
-    printf("Bytes sent : %ld\n", bytes_sent);
+    printf("Bytes sent : %ld\n", nr_bytes_sent);
 }
 
 int main(int argc, char *argv[])
@@ -415,7 +389,6 @@ int main(int argc, char *argv[])
 
     if(strcmp(protocol_type, "tcps") == 0)
     {
-        //printf("%s", "DA\n");
         tcpsw_protocol();
     }
 
