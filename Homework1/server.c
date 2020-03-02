@@ -246,7 +246,7 @@ void udp_protocol()     //se primesc pachetele corect, cateva(~20) se pierd
                 perror ("Eroare la primirea mesajului.\n");
             }
 
-            //printf("%d\n", bytes_received);
+            printf("%d\n", bytes_received);
             nr_messages_received ++;
             nr_bytes_received += bytes_received;
 
