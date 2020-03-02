@@ -9,6 +9,7 @@
 #include <time.h>
 
 #define MESSAGE_SIZE 65507
+//65507
 //#define TCP_MESSAGE_SIZE 65535
 #define TCP_MESSAGE_SIZE 65483
 #define LOCALHOST_ADRESS "127.0.0.1"
