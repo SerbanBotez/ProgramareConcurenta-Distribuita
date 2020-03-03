@@ -253,7 +253,7 @@ void udp_protocol()     //se primesc pachetele corect, cateva(~20) se pierd
             if(bytes_received > MESSAGE_SIZE)
                 nr_messages_diff_sizes++;
 
-            if(bytes_received < MESSAGE_SIZE || bytes_received == 0)
+            if(bytes_received == 0 || bytes_received != MESSAGE_SIZE)
                 break;
 
         }
