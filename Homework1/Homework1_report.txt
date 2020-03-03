@@ -1,7 +1,7 @@
 Homework1 Report
 Botez Serban-Mihai MSD1
 
-The homework contains two applications, a client and a sever which support data streaming using tcp or udp, along with stop and wait data streaming using tcp and udp.
+The homework contains two applications, a client and a server which support data streaming using tcp or udp, along with stop and wait data streaming using tcp and udp.
 
 The server can be executed using the ./server command, after which a desired communication protocol must be specified by using one of the four commands supported by the server.
 The client  can be executed using the ./client command, after which a desired communication protocol must be specified by using one of the four commands supported by the client.
@@ -12,49 +12,67 @@ The "tcps" and "udps" commands use the stop and wait data streaming method.
 Both the server and client must select the same command, in order to use the desired protocol for communication.
 
 The client reads the file 65335 bytes at a time or a lower value if the file is ending. 
-After succesfully reading from the file, the client first sends to the server the number of bytes read from the file and then sends the message itself.
+After succesfully reading from the file, the client sends the message itself.
 
 In the stop and wait method, the server verifies after each succesfull read if the number of bytes returned by the read function is equal to the number of bytes that were supposed to be reveived.
 If the server received less bytes than intended, a message is sent to the client requesting the message to be sent again, until the correct number of bytes is received.
 
 For the tests, a 672 mb file was used which was created from the command line by multiplying the "bbbbbb" line a number of times.
 Each transmission method was executed 5 times, and the average value was calculated and written bellow.
-Both the server and client run locally.
+
+
+LOCALHOST
 
 UDP STREAMING:
 Client:												
-	Transmission time : 4.766043 seconds 			
-	Mesages sent : 10786
+	Transmission time : 4.058025 seconds 		
+	Mesages sent : 10757
 	Bytes sent : 704643072
 Server
-	Mesages received : 10774
-	Bytes reveived : 703859052
+	Mesages received : 10755
+	Bytes reveived : 704053509
 
 UDP STOP AND WAIT:
 Client:
-	Transmission time : 4.683453 seconds 
-	Mesages sent : 10786
+	Transmission time : 4.766043 seconds 
+	Mesages sent : 10757
 	Bytes sent : 704643072
 Server:
-	Mesages received : 10786
+	Mesages received : 10757
 	Bytes reveived : 704643072
 
 TCP STREAMING:
 Client:
-	Transmission time : 4.777322 seconds
-	Messages sent : 10786
+	Transmission time : 4.603231 seconds
+	Messages sent : 10761
 	Bytes sent 704643072
 Server:
-	Messages read : 10789
-	Bytes read : 704643060
+	Messages read : 10764
+	Bytes read : 704643072
 
 TCP STOP AND WAIT:
 Client:
-	Transmission time : 4.603231 seconds
-	Messages sent : 10786
+	Transmission time : 4.777322 seconds
+	Messages sent : 10761
 	Bytes sent: 704643072
 Server:
-	Messages read : 15099
-	Bytes read : 986427970
+	Messages read : 10761
+	Bytes read : 704662563
 
+
+GOOGLE CLOUD
+	
+	TCP STREAMING:
+	Client:
+		Transmission time : 2 minutes & 28.08 seconds
+		Messages sent : 10761
+		Bytes sent : 704643072
+
+	Server:
+		Messages received : 378405
+		Bytes received : 704643072
+		Protocol used : TCP STREAMING
+
+	TCP STOP-WAIT:
+		-
 
