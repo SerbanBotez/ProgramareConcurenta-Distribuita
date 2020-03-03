@@ -13,7 +13,7 @@
 //#define TCP_MESSAGE_SIZE 65535
 #define TCP_MESSAGE_SIZE 65483
 #define LOCALHOST_ADRESS "127.0.0.1"
-#define SERVER_ADRESS "35.226.70.186"
+#define SERVER_ADRESS "35.222.8.94"
 
 extern int errno;
 
@@ -30,7 +30,7 @@ void tcp_protocol()
 
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(2030);
-        serverAddr.sin_addr.s_addr = inet_addr(LOCALHOST_ADRESS);
+        serverAddr.sin_addr.s_addr = inet_addr(SERVER_ADRESS);
         //
 
         if(connect(clientSocket, (struct sockaddr *) &serverAddr, sizeof(struct sockaddr)) == -1)
@@ -224,7 +224,7 @@ void udp_protocol()
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(2030);
-    serverAddr.sin_addr.s_addr = inet_addr(LOCALHOST_ADRESS); 
+    serverAddr.sin_addr.s_addr = inet_addr(SERVER_ADRESS); 
     //"35.226.70.186"
 
     length = sizeof(serverAddr);
@@ -266,7 +266,7 @@ void udp_protocol()
             perror ("Eroare la trimiterea mesajului.\n");
         }
 
-        //printf("%d\n", bytes_sent);
+        printf("%d\n", bytes_sent);
 
         nr_messages_sent ++;
         nr_bytes_sent += bytes_sent;
